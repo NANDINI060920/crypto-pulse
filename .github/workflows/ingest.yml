@@ -1,0 +1,39 @@
+name: Scheduled Price Ingestion
+
+# Runs every 30 minutes and commits the updated SQLite DB back to the repo.
+# This is what lets the pipeline run continuously without you keeping a
+# laptop or server on -- a nice, cheap "real infra" touch for a portfolio
+# project. For higher-frequency or production use, swap the commit step
+# for a proper database (Postgres) instead of committing a binary file.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run ingestion
+        run: python ingest.py
+
+      - name: Commit updated database
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/crypto_pulse.db
+          git diff --staged --quiet || git commit -m "Automated price ingestion"
+          git push
