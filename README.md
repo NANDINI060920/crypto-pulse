@@ -111,3 +111,4 @@ crypto-pulse/
 ## License
 
 MIT
+**Live demo:**https://crypto-pulse-nandini.streamlit.app
